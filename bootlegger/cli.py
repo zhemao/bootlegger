@@ -32,8 +32,12 @@ def main():
 
     host = conf.get('speakeasy', 'host') or DEFAULT_HOST
     username = conf.get('speakeasy', 'username') or getpass.getuser()
-    pubkey = open(os.path.expanduser('~/.bootlegger/user_public.pem')).read()
-    privkey = open(os.path.expanduser('~/.bootlegger/user_private.pem')).read()
+    
+    pubkeyfname = '~/.bootlegger/' + username + '_public.pem'
+    privkeyfname = '~/.bootlegger/' + username + '_private.pem'
+
+    pubkey = open(os.path.expanduser(pubkeyfname)).read()
+    privkey = open(os.path.expanduser(privkeyfname)).read()
     
     if 'ENCRYPTED' in privkey:
         password = getpass.getpass('Password: ')
@@ -56,5 +60,18 @@ def main():
     elif sys.argv[1] == 'list':
         flist = list_files(cookies, host)
 
-        for finfo in flist:
-            print finfo['filename'] 
+        for fname in flist:
+            print fname
+
+    elif sys.argv[1] == 'info':
+        finfo = get_info(sys.argv[2], cookies, host)
+
+        for key in finfo:
+            print(key + ': ' + str(finfo[key]))
+
+    elif sys.argv[1] == 'share':
+        recipient = sys.argv[2]
+        filenames = sys.argv[3:]
+
+        for fname in filenames:
+            share(fname, recipient, privkey, cookies, host, password)

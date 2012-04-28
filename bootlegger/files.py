@@ -6,6 +6,7 @@ import os
 from cStringIO import StringIO
 from base64 import b64encode, b64decode
 import json
+from auth import get_pubkey
 
 rng = Random.new().read
 
@@ -64,3 +65,37 @@ def list_files(cookies, host):
     resp = json.loads(r.text)
 
     return resp['files']
+
+def get_info(fname, cookies, host):
+    url = 'http://' + host + '/file/info/' + fname
+
+    r = requests.get(url, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
+
+    resp = json.loads(r.text)
+
+    return resp['fileinfo']
+
+def share(fname, recipient, privkey, cookies, host, password):
+    finfo = get_info(fname, cookies, host)
+    
+    rsakey = RSA.importKey(privkey, password)
+    aes_key = rsakey.decrypt(b64decode(finfo['aes_key']))
+    
+    pubkey = get_pubkey(recipient, host)
+    rsakey = RSA.importKey(pubkey)
+    
+    aes_key = rsakey.encrypt(aes_key, rng(384))[0]
+    aes_key = unicode(b64encode(aes_key))
+
+    headers = {'X-Symmetric-Key': aes_key}
+    data = {'recipient': recipient, 'filename': fname}
+
+    url = 'http://' + host + '/file/share'
+
+    r = requests.post(url, headers=headers, data=data, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
