@@ -19,7 +19,7 @@ def authenticate(username, privkey, host=DEFAULT_HOST):
     url = 'http://' + host + '/authenticate'
     rsakey = RSA.importKey(privkey)
     shibboleth = 'Rosie sent me'
-    signature, _ = rsakey.sign(shibboleth, rng(284))
+    signature = rsakey.sign(shibboleth, rng(384))[0]
     data = {'username': username, 
             'shibboleth': shibboleth, 
             'signature': str(signature)}
