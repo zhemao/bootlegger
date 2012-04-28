@@ -7,7 +7,12 @@ setup(
     author='Zhehao Mao',
     author_email='zhehao.mao@gmail.com',
     packages=['bootlegger'],
-    scripts=['scripts/bootlegger'],
+    entry_points = {
+        "console_scripts" : [
+            "bootlegger = bootlegger.cli:main",
+            "bl = bootlegger.cli:main"
+        ]
+    },
     install_requires=['pycrypto', 'requests']
 )
 
