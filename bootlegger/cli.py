@@ -5,6 +5,20 @@ from .files import *
 from ConfigParser import SafeConfigParser as ConfigParser
 import json
 
+def _load_cookies():
+    cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
+    if os.path.isfile(cookiefname):
+        f = open(cookiefname)
+        cookies = json.load(f)
+        f.close()
+    else:
+        cookies = authenticate(username, privkey, host)
+        f = open(cookiefname, 'w')
+        json.dump(cookies, f) 
+        f.close()
+
+    return dict([(str(key), str(val)) for (key, val) in cookies.items()])
+
 def main():
     conf = ConfigParser()
     conf.read([os.path.expanduser('~/.bootlegger/bootlegger.conf')])
@@ -18,16 +32,7 @@ def main():
     pubkey = open(os.path.expanduser('~/.bootlegger/user_public.pem')).read()
     privkey = open(os.path.expanduser('~/.bootlegger/user_private.pem')).read()
 
-    cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
-    if os.path.isfile(cookiefname):
-        f = open(cookiefname)
-        cookies = json.load(f)
-        f.close()
-    else:
-        cookies = authenticate(username, privkey, host)
-        f = open(cookiefname, 'w')
-        json.dump(cookies, f) 
-        f.close()
+    cookies = _load_cookies()
 
     if sys.argv[1] == 'upload':
         fname = sys.argv[2]

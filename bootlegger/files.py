@@ -28,9 +28,10 @@ def upload(fname, pubkey, cookies, host=DEFAULT_HOST):
 
     url = 'http://' + host + '/file/upload'
     
-    files = {os.path.basename(fname): StringIO(cipher)}
-    headers = {'X-Symmetric-Key': aes_key}
+    files = {'file': (os.path.basename(fname), StringIO(cipher))}
+    headers = {'X-Symmetric-Key': str(aes_key)}
     print headers
+    print cookies
 
     r = requests.post(url, cookies=cookies, files=files, headers=headers)
 

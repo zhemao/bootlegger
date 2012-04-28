@@ -30,4 +30,3 @@ def authenticate(username, privkey, host=DEFAULT_HOST):
         r.raise_for_status()
 
     return r.cookies
-
