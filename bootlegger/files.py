@@ -50,9 +50,9 @@ def download(fname, privkey, cookies, host=DEFAULT_HOST):
     r = requests.get(url, cookies=cookies)
     aes_key = b64decode(r.headers['X-Symmetric-Key'])
     rsakey = RSA.importKey(privkey)
-    aes_key = rsakey.decrypt(aeskey)
+    aes_key = rsakey.decrypt(aes_key)
     aes = AES.new(aes_key)
-    plain = aes.decrypt(r.data)
+    plain = aes.decrypt(r.content)
 
     return _strip_zeros(plain)
 
