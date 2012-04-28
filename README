@@ -21,7 +21,7 @@ and user_public.pem, respectively. This can be accomplished using openssl.
 	cd ~/.bootlegger
 	openssl -genrsa -out user_private.pem 2048
 	# add -des3 if you want a passphrase
-	openssl -pubout -in user_private.pem -out user_public.pem
+	openssl rsa -pubout -in user_private.pem -out user_public.pem
 
 Create a file in the .bootlegger folder called bootlegger.conf. Add the 
 following information
