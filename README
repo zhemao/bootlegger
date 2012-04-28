@@ -50,3 +50,10 @@ To download a file run
 
 	bl download file.txt
 
+To get detailed information about a file, run
+
+	bl info file.txt
+
+To share a file with another user, run
+
+	bl share otheruser file.txt
