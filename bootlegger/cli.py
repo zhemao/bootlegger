@@ -34,7 +34,11 @@ def main():
     username = conf.get('speakeasy', 'username') or getpass.getuser()
     pubkey = open(os.path.expanduser('~/.bootlegger/user_public.pem')).read()
     privkey = open(os.path.expanduser('~/.bootlegger/user_private.pem')).read()
-    password = getpass.getpass('Password: ')
+    
+    if 'ENCRYPTED' in privkey:
+        password = getpass.getpass('Password: ')
+    else:
+        password = ''
 
     cookies = _load_cookies(username, privkey, host, password)
 
