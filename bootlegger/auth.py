@@ -30,3 +30,23 @@ def authenticate(username, privkey, host=DEFAULT_HOST):
         r.raise_for_status()
 
     return r.cookies
+
+def add_pubkey(username, pubkey, privkey, host=DEFAULT_HOST):
+    rsakey = RSA.importKey(privkey)
+    shibboleth = 'Rosie sent me'
+    signature = rsakey.sign(shibboleth, rng(384))[0]
+    data = {'username': username, 
+            'shibboleth': shibboleth, 
+            'signature': str(signature),
+            'pubkey': pubkey}
+
+    url = 'http://' + host + '/pubkey'
+    
+    r = requests.post(url, data=data)
+    
+    if r.status_code != 200:
+        r.raise_for_status()
+
+    return r.cookies
+
+

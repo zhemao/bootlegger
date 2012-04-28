@@ -43,4 +43,5 @@ def main():
         f = open(fname, 'wb')
         f.write(raw)
         f.close()
-    
+    elif sys.argv[1] == 'addkey':
+        add_pubkey(username, pubkey, privkey, host)
