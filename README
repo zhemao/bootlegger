@@ -1,0 +1,46 @@
+Bootlegger: Command Line Interface for Speakeasy
+================================================
+
+Bootlegger is the command line interface for speakeasy, the paranoid file 
+storage solution.
+
+Installation:
+	
+	pip install bootlegger
+
+or clone the repo and run 
+
+	python setup.py install
+
+Configuration:
+
+Create a folder in your home directory called .bootlegger.
+In this folder, generate private and public RSA keys called user_private.pem 
+and user_public.pem, respectively. This can be accomplished using openssl.
+
+	cd ~/.bootlegger
+	openssl -genrsa -out user_private.pem 2048
+	openssl -pubout -in user_private.pem -out user_public.pem
+
+Create a file in the .bootlegger folder called bootlegger.conf. Add the 
+following information
+
+	[speakeasy]
+	host = www.example.com
+	username = testuser
+
+Replace the values with your desired host and username.
+
+Usage:
+
+To add your public key to the server, run
+
+	bl addkey 
+
+To upload a file, run
+
+	bl upload file.txt
+
+To download a file run
+
+	bl download file.txt
