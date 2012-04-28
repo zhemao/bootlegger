@@ -41,6 +41,11 @@ To upload a file, run
 
 	bl upload file.txt
 
+To list all files on the server, run
+
+	bl list
+
 To download a file run
 
 	bl download file.txt
+

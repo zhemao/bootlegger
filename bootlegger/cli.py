@@ -4,15 +4,18 @@ from .auth import *
 from .files import *
 from ConfigParser import SafeConfigParser as ConfigParser
 import json
+import getpass
 
-def _load_cookies():
+DEFAULT_HOST = 'localhost'
+
+def _load_cookies(username, privkey, host, password):
     cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
     if os.path.isfile(cookiefname):
         f = open(cookiefname)
         cookies = json.load(f)
         f.close()
     else:
-        cookies = authenticate(username, privkey, host)
+        cookies = authenticate(username, privkey, host, password)
         f = open(cookiefname, 'w')
         json.dump(cookies, f) 
         f.close()
@@ -27,24 +30,25 @@ def main():
         print "Usage: " + sys.argv[0] + " subcommand [args ... ]"
         exit(1)
 
-    host = conf.get('speakeasy', 'host')
-    username = conf.get('speakeasy', 'username')
+    host = conf.get('speakeasy', 'host') or DEFAULT_HOST
+    username = conf.get('speakeasy', 'username') or getpass.getuser()
     pubkey = open(os.path.expanduser('~/.bootlegger/user_public.pem')).read()
     privkey = open(os.path.expanduser('~/.bootlegger/user_private.pem')).read()
+    password = getpass.getpass('Password: ')
 
-    cookies = _load_cookies()
+    cookies = _load_cookies(username, privkey, host, password)
 
     if sys.argv[1] == 'upload':
-        fname = sys.argv[2]
-        upload(fname, pubkey, cookies, host)
+        for fname in sys.argv[2:]:
+            upload(fname, pubkey, cookies, host)
     elif sys.argv[1] == 'download':
-        fname = sys.argv[2]
-        raw = download(fname, privkey, cookies, host)
-        f = open(fname, 'wb')
-        f.write(raw)
-        f.close()
+        for fname in sys.argv[2:]:
+            raw = download(fname, privkey, cookies, host, password)
+            f = open(fname, 'wb')
+            f.write(raw)
+            f.close()
     elif sys.argv[1] == 'addkey':
-        add_pubkey(username, pubkey, privkey, host)
+        add_pubkey(username, pubkey, privkey, host, password)
     elif sys.argv[1] == 'list':
         flist = list_files(cookies, host)
 

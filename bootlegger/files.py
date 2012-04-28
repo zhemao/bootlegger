@@ -7,11 +7,9 @@ from cStringIO import StringIO
 from base64 import b64encode, b64decode
 import json
 
-DEFAULT_HOST = 'localhost'
-
 rng = Random.new().read
 
-def upload(fname, pubkey, cookies, host=DEFAULT_HOST):
+def upload(fname, pubkey, cookies, host):
     f = open(fname)
     rsakey = RSA.importKey(pubkey)
 
@@ -43,19 +41,19 @@ def _strip_zeros(text):
             return text[:i+1]
     return ''
 
-def download(fname, privkey, cookies, host=DEFAULT_HOST):
+def download(fname, privkey, cookies, host, password):
     url = 'http://' + host + '/file/download/' + fname
 
     r = requests.get(url, cookies=cookies)
     aes_key = b64decode(r.headers['X-Symmetric-Key'])
-    rsakey = RSA.importKey(privkey)
+    rsakey = RSA.importKey(privkey, password)
     aes_key = rsakey.decrypt(aes_key)
     aes = AES.new(aes_key)
     plain = aes.decrypt(r.content)
 
     return _strip_zeros(plain)
 
-def list_files(cookies, host=DEFAULT_HOST):
+def list_files(cookies, host):
     url = 'http://' + host + '/file/list'
     
     r = requests.get(url, cookies=cookies)

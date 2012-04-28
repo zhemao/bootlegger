@@ -2,11 +2,9 @@ import requests
 from Crypto.PublicKey import RSA
 from Crypto import Random
 
-DEFAULT_HOST = 'speakeasy-zhemao.rhcloud.com'
-
 rng = Random.new().read
 
-def get_pubkey(username, host=DEFAULT_HOST):
+def get_pubkey(username, host):
     url = 'http://' + host + '/pubkey/' + username
     r = requests.get(url)
 
@@ -15,9 +13,9 @@ def get_pubkey(username, host=DEFAULT_HOST):
 
     return r.text
 
-def authenticate(username, privkey, host=DEFAULT_HOST):
+def authenticate(username, privkey, host, password):
     url = 'http://' + host + '/authenticate'
-    rsakey = RSA.importKey(privkey)
+    rsakey = RSA.importKey(privkey, password)
     shibboleth = 'Rosie sent me'
     signature = rsakey.sign(shibboleth, rng(384))[0]
     data = {'username': username, 
@@ -31,8 +29,8 @@ def authenticate(username, privkey, host=DEFAULT_HOST):
 
     return r.cookies
 
-def add_pubkey(username, pubkey, privkey, host=DEFAULT_HOST):
-    rsakey = RSA.importKey(privkey)
+def add_pubkey(username, pubkey, privkey, host, password):
+    rsakey = RSA.importKey(privkey, password)
     shibboleth = 'Rosie sent me'
     signature = rsakey.sign(shibboleth, rng(384))[0]
     data = {'username': username, 
@@ -40,7 +38,7 @@ def add_pubkey(username, pubkey, privkey, host=DEFAULT_HOST):
             'signature': str(signature),
             'pubkey': pubkey}
 
-    url = 'http://' + host + '/pubkey'
+    url = 'http://' + host + '/pubkey/add'
     
     r = requests.post(url, data=data)
     
