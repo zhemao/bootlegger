@@ -45,3 +45,8 @@ def main():
         f.close()
     elif sys.argv[1] == 'addkey':
         add_pubkey(username, pubkey, privkey, host)
+    elif sys.argv[1] == 'list':
+        flist = list_files(cookies, host)
+
+        for finfo in flist:
+            print finfo['filename'] 

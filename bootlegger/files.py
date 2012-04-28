@@ -5,8 +5,9 @@ from Crypto import Random
 import os
 from cStringIO import StringIO
 from base64 import b64encode, b64decode
+import json
 
-DEFAULT_HOST = 'speakeasy-zhemao.rhcloud.com'
+DEFAULT_HOST = 'localhost'
 
 rng = Random.new().read
 
@@ -30,8 +31,6 @@ def upload(fname, pubkey, cookies, host=DEFAULT_HOST):
     
     files = {'file': (os.path.basename(fname), StringIO(cipher))}
     headers = {'X-Symmetric-Key': str(aes_key)}
-    print headers
-    print cookies
 
     r = requests.post(url, cookies=cookies, files=files, headers=headers)
 
@@ -56,3 +55,14 @@ def download(fname, privkey, cookies, host=DEFAULT_HOST):
 
     return _strip_zeros(plain)
 
+def list_files(cookies, host=DEFAULT_HOST):
+    url = 'http://' + host + '/file/list'
+    
+    r = requests.get(url, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
+
+    resp = json.loads(r.text)
+
+    return resp['files']
