@@ -14,6 +14,11 @@ def _load_cookies(username, privkey, host, password):
         f = open(cookiefname)
         cookies = json.load(f)
         f.close()
+        if cookies['username'] != username:
+            cookies = authenticate(username, privkey, host, password)
+            f = open(cookiefname, 'w')
+            json.dump(cookies, f)
+            f.close()
     else:
         cookies = authenticate(username, privkey, host, password)
         f = open(cookiefname, 'w')
