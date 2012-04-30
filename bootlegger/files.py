@@ -7,26 +7,23 @@ from cStringIO import StringIO
 from base64 import b64encode, b64decode
 import json
 from auth import get_pubkey
-from .cryptfile import CryptFile
+from .cryptfile import encrypt_file, decrypt_file
 
 rng = Random.new().read
 
 def upload(fname, pubkey, cookies, host):
     rsakey = RSA.importKey(pubkey)
     
-    if len(plain) % 16 != 0:
-        padding = 16 - len(plain) % 16
-        plain += '\0' * padding
-
     aes_key = rng(32)
-
-    cryptf = CryptFile(open(fname, 'rb'), aes_key)
-
+    tempname = '/tmp/' + b64encode(rng(16)) + '.bootleg'
+    encrypt_file(fname, tempname, aes_key)
     aes_key = rsakey.encrypt(aes_key, rng(384))[0]
-    aes_key = unicode(b64encode(aes_key))
+    aes_key = b64encode(aes_key)
 
     url = 'http://' + host + '/file/upload'
     
+    cryptf = open(tempname)
+
     files = {'file': (os.path.basename(fname), cryptf)}
     headers = {'X-Symmetric-Key': str(aes_key)}
 
@@ -39,17 +36,21 @@ def upload(fname, pubkey, cookies, host):
 
 def download(fname, privkey, cookies, host, password):
     url = 'http://' + host + '/file/download/' + fname
-
+    tempname = '/tmp/' + b64encode(rng(16)) + '.bootleg'
     r = requests.get(url, cookies=cookies)
 
     if r.status_code != 200:
         r.raise_for_status()
 
+    with open(tempname, 'wb') as tempf:
+        for chunk in r.iter_content():
+            tempf.write(chunk)
+    
     aes_key = b64decode(r.headers['X-Symmetric-Key'])
     rsakey = RSA.importKey(privkey, password)
     aes_key = rsakey.decrypt(aes_key)
 
-    return DecryptFile(r.raw, aes_key)
+    decrypt_file(tempname, fname, aes_key)
 
 def list_files(cookies, host):
     url = 'http://' + host + '/file/list'

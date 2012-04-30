@@ -1,88 +1,59 @@
 from Crypto.Cipher import AES
 import struct
 
-CHUNK_SIZE = 1024
+CHUNK_SIZE = 32768
 
-class AESFile:
-    def _read_all(self):
-        chunk = self._read_chunk(CHUNK_SIZE)
-        whole = ''
+def encrypt_chunk(f, aes):
+    chunk = f.read(CHUNK_SIZE)
+    realn = len(chunk)
 
-        while chunk:
-            whole += chunk
-            chunk = self._read_chunk(CHUNK_SIZE)
+    if realn == 0:
+        return ''
 
-        return whole
+    if realn % 16 != 0:
+        padding = 16 - (realn % 16)
+        chunk += ' ' * padding
 
-    def read(self, n = -1):
-        if n < 0:
-            return self._read_all()
-        else:
-            return self._read_chunk(n)
-
-    def __iter__(self):
-        chunk = self._read_chunk(CHUNK_SIZE)
-        while chunk:
-            yield chunk
-            chunk = self._read_chunk(CHUNK_SIZE)
-
-class CryptFile(AESFile):
-    def __init__(self, f, key):
-        self.file = f
-        self.aes = AES.new(key)
-
-    def _read_chunk(self, n):
-        filen = n - struct.calcsize('!i')
-        if filen % 16 != 0:
-            filen = filen - (filen % 16)
-        
-        chunk = self.file.read(filen)
-        realn = len(chunk)
-
-        if realn == 0:
-            return ''
-
-        if realn % 16 != 0:
-            chunk += '\0' * (16 - realn % 16)
-
-        head = struct.pack('!i', realn)
-
-        return head + self.aes.encrypt(chunk)
-
+    head = struct.pack('!H', realn)
     
+    return head + aes.encrypt(chunk)
+
+def decrypt_chunk(f, aes):
+    headn = struct.calcsize('!H')
+    head = f.read(headn)
+
+    if len(head) == 0:
+        return ''
+
+    realn, = struct.unpack('!H', head)
+
+    if realn % 16 != 0:
+        n = realn + (16 - (realn % 16))
+    else:
+        n = realn
+
+    chunk = f.read(n)
+    plain = aes.decrypt(chunk)
+
+    return plain[:realn]
+
+def transform_file(infname, outfname, key, chunk_func):
+    inf = open(infname, 'rb')
+    outf = open(outfname, 'wb')
     
-    def close(self):
-        self.file.close()
+    aes = AES.new(key)
+    chunk = chunk_func(inf, aes)
 
-class DecryptFile(AESFile):
-    def __init__(self, f, key):
-        self.file = f
-        self.aes = AES.new(key)
-        self.temp = ''
+    while chunk:
+        outf.write(chunk)
+        chunk = chunk_func(inf, aes)
 
-    def _read_chunk(self, n):
-        if len(self.temp) >= n:
-            chunk = self.temp[:n]
-            self.temp = self.temp[n:]
-            return chunk
+    inf.close()
+    outf.close()
 
-        headn = struct.calcsize('!i')
-        head = self.file.read(headn)
-        realn, = struct.unpack(head)
-        
-        filen = realn + (16 - realn % 16)
-        chunk = self.file.read(filen)
+def encrypt_file(infname, outfname, key):
+    transform_file(infname, outfname, key, encrypt_chunk)
 
-        while len(chunk) < filen:
-            chunk += self.file.read(filen - len(chunk))
-
-        plain = self.temp + self.aes.decrypt(chunk)[:realn]
-
-        if n < len(plain):
-            self.temp = plain[n:]
-            return plain[:n]
-
-        self.temp = ''
-        return plain
-
+def decrypt_file(infname, outfname, key):
+    transform_file(infname, outfname, key, decrypt_chunk)
 

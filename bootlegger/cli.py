@@ -5,6 +5,8 @@ from .files import *
 from ConfigParser import SafeConfigParser as ConfigParser
 import json
 import getpass
+from .cryptfile import encrypt_file, decrypt_file
+from Crypto import Random
 
 DEFAULT_HOST = 'localhost'
 
@@ -56,11 +58,7 @@ def main():
             upload(fname, pubkey, cookies, host)
     elif sys.argv[1] == 'download':
         for fname in sys.argv[2:]:
-            inf = download(fname, privkey, cookies, host, password)
-            f = open(fname, 'wb')
-            for chunk in inf:
-                f.write(chunk)
-            f.close()
+            download(fname, privkey, cookies, host, password)
     elif sys.argv[1] == 'addkey':
         add_pubkey(username, pubkey, privkey, host, password)
     elif sys.argv[1] == 'list':
@@ -95,3 +93,44 @@ def main():
 
         for fname in filenames:
             delete(fname, cookies, host)
+
+def blencrypt():
+    if len(sys.argv) < 3:
+        print 'Usage: ' + sys.argv[0] + ' infile keyfile'
+        exit(1)
+
+    infname = sys.argv[1]
+    outfname = sys.argv[1] + '.bootleg'
+
+    with open(sys.argv[2], 'rb') as f:
+        key = f.read()
+
+    encrypt_file(infname, outfname, key)
+
+def bldecrypt():
+    if len(sys.argv) < 3:
+        print 'Usage: ' + sys.argv[0] + ' infile keyfile'
+        exit(1)
+
+    infname = sys.argv[1]
+    outfname, suffix = os.path.splitext(infname)
+
+    if suffix != '.bootleg':
+        print 'Input must be a .bootleg file'
+        exit(1)
+
+    with open(sys.argv[2], 'rb') as f:
+        key = f.read()
+
+    decrypt_file(infname, outfname, key)
+
+def blgenaeskey():
+    if len(sys.argv) < 2:
+        f = sys.stdout
+    else:
+        f = open(sys.argv[1], 'wb')
+
+    key = Random.new().read(32)
+    f.write(key)
+
+    f.close()
