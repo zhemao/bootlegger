@@ -46,6 +46,10 @@ def download(fname, privkey, cookies, host, password):
     url = 'http://' + host + '/file/download/' + fname
 
     r = requests.get(url, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
+
     aes_key = b64decode(r.headers['X-Symmetric-Key'])
     rsakey = RSA.importKey(privkey, password)
     aes_key = rsakey.decrypt(aes_key)
@@ -96,6 +100,26 @@ def share(fname, recipient, privkey, cookies, host, password):
     url = 'http://' + host + '/file/share'
 
     r = requests.post(url, headers=headers, data=data, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
+
+def versions(fname, cookies, host):
+    url = 'http://' + host + '/file/versions/' + fname
+
+    r = requests.get(url, cookies=cookies)
+
+    if r.status_code != 200:
+        r.raise_for_status()
+
+    resp = json.loads(r.text)
+
+    return resp['dates']
+
+def delete(fname, cookies, host):
+    url = 'http://' + host + '/file/delete/' + fname
+
+    r = requests.post(url, cookies=cookies)
 
     if r.status_code != 200:
         r.raise_for_status()

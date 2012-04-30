@@ -80,3 +80,17 @@ def main():
 
         for fname in filenames:
             share(fname, recipient, privkey, cookies, host, password)
+
+    elif sys.argv[1] == 'versions':
+        fname = sys.argv[2]
+
+        dates = versions(fname, cookies, host)
+
+        for d in dates:
+            print(d)
+
+    elif sys.argv[1] == 'delete':
+        filenames = sys.argv[2:]
+
+        for fname in filenames:
+            delete(fname, cookies, host)
