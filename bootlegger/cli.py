@@ -56,9 +56,10 @@ def main():
             upload(fname, pubkey, cookies, host)
     elif sys.argv[1] == 'download':
         for fname in sys.argv[2:]:
-            raw = download(fname, privkey, cookies, host, password)
+            inf = download(fname, privkey, cookies, host, password)
             f = open(fname, 'wb')
-            f.write(raw)
+            for chunk in inf:
+                f.write(chunk)
             f.close()
     elif sys.argv[1] == 'addkey':
         add_pubkey(username, pubkey, privkey, host, password)
