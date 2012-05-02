@@ -86,7 +86,7 @@ def share(fname, recipient, privkey, cookies, host, password):
     rsakey = RSA.importKey(pubkey)
     
     aes_key = rsakey.encrypt(aes_key, rng(384))[0]
-    aes_key = unicode(b64encode(aes_key))
+    aes_key = b64encode(aes_key)
 
     headers = {'X-Symmetric-Key': aes_key}
     data = {'recipient': recipient, 'filename': fname}
