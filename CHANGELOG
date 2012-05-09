@@ -1,0 +1,18 @@
+Version 0.5.1
+
+Verify the signature set by the server in the cookie. This is sort of a 
+chicken-egg problem, because the server's public key must itself be downloaded
+from the server. Thus this probably wouldn't be that effective against MITM
+attacks. I will have to research better ways of doing this. 
+
+Version 0.5.0
+
+Change to a chunked AES encryption scheme, in which file is encrypted in blocks
+of at most 2^15 bytes at a time. This avoids having to read the entire file 
+into memory before encrypting it, allowing for fast encryption of large files.
+
+Version 0.4.0
+
+Add support for listing older versions of a file and deleting a file. 
+Note: deletion is non-reversible. All previous versions of the file will be
+deleted. 

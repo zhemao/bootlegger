@@ -5,6 +5,14 @@ import os
 
 rng = Random.new().read
 
+class SecurityException(BaseException):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+    def __repr__(self):
+        return 'SecurityException: ' + self.msg
+
 def get_pubkey(username, host):
     fname = os.path.expanduser('~/.bootlegger/' + username + '_public.pem')
 
@@ -39,6 +47,13 @@ def authenticate(username, privkey, host, password):
     
     if r.status_code != 200:
         r.raise_for_status()
+
+    servkey = get_pubkey('server', host)
+    rsakey = RSA.importKey(servkey)
+    servsig = int(r.cookies['signature'])
+
+    if not rsakey.verify(username, (servsig,)):
+        raise SecurityException('Could not verify server signature') 
 
     return r.cookies
 
