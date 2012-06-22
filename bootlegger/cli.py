@@ -1,7 +1,6 @@
 import os
 import sys
-from .auth import *
-from .files import *
+from .api import Bootlegger
 from ConfigParser import SafeConfigParser as ConfigParser
 import json
 import getpass
@@ -9,25 +8,6 @@ from .cryptfile import encrypt_file, decrypt_file
 from Crypto import Random
 
 DEFAULT_HOST = 'localhost'
-
-def _load_cookies(username, privkey, host, password):
-    cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
-    if os.path.isfile(cookiefname):
-        f = open(cookiefname)
-        cookies = json.load(f)
-        f.close()
-        if cookies['username'] != username:
-            cookies = authenticate(username, privkey, host, password)
-            f = open(cookiefname, 'w')
-            json.dump(cookies, f)
-            f.close()
-    else:
-        cookies = authenticate(username, privkey, host, password)
-        f = open(cookiefname, 'w')
-        json.dump(cookies, f) 
-        f.close()
-
-    return dict([(str(key), str(val)) for (key, val) in cookies.items()])
 
 def main():
     conf = ConfigParser()
@@ -51,24 +31,29 @@ def main():
     else:
         password = ''
 
-    cookies = _load_cookies(username, privkey, host, password)
+    if sys.argv[1] == 'addkey':
+        bl = BootLegger(username, pubkey, priveky, host, password, False)
+        bl.add_pubkey()
+        sys.exit(0)
+        
+    bl = BootLegger(username, pubkey, privkey, host, password) 
 
     if sys.argv[1] == 'upload':
         for fname in sys.argv[2:]:
-            upload(fname, pubkey, cookies, host)
+            bl.upload(fname)
+    
     elif sys.argv[1] == 'download':
         for fname in sys.argv[2:]:
-            download(fname, privkey, cookies, host, password)
-    elif sys.argv[1] == 'addkey':
-        add_pubkey(username, pubkey, privkey, host, password)
+            bl.download(fname)
+    
     elif sys.argv[1] == 'list':
-        flist = list_files(cookies, host)
+        flist = bl.list_files()
 
         for fname in flist:
             print fname
 
     elif sys.argv[1] == 'info':
-        finfo = get_info(sys.argv[2], cookies, host)
+        finfo = bl.get_info(sys.argv[2])
 
         for key in finfo:
             print(key + ': ' + str(finfo[key]))
@@ -78,12 +63,12 @@ def main():
         filenames = sys.argv[3:]
 
         for fname in filenames:
-            share(fname, recipient, privkey, cookies, host, password)
+            bl.share(fname, recipient)
 
     elif sys.argv[1] == 'versions':
         fname = sys.argv[2]
 
-        dates = versions(fname, cookies, host)
+        dates = bl.versions(fname)
 
         for d in dates:
             print(d)
@@ -92,7 +77,7 @@ def main():
         filenames = sys.argv[2:]
 
         for fname in filenames:
-            delete(fname, cookies, host)
+            bl.delete(fname)
 
 def blencrypt():
     if len(sys.argv) < 3:

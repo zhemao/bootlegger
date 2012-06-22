@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bootlegger',
-    version='0.5.2',
+    version='1.0.0',
     description='Command Line Interface to Speakeasy',
     author='Zhehao Mao',
     author_email='zhehao.mao@gmail.com',
