@@ -1,6 +1,6 @@
 import os
 import sys
-from .api import Bootlegger
+from .api import BootLegger
 from ConfigParser import SafeConfigParser as ConfigParser
 import json
 import getpass
@@ -32,7 +32,7 @@ def main():
         password = ''
 
     if sys.argv[1] == 'addkey':
-        bl = BootLegger(username, pubkey, priveky, host, password, False)
+        bl = BootLegger(username, pubkey, privkey, host, password, False)
         bl.add_pubkey()
         sys.exit(0)
         

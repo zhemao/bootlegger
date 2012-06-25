@@ -4,7 +4,6 @@ from Crypto import Random
 import os
 from base64 import b64encode, b64decode
 import json
-from auth import get_pubkey
 from .cryptfile import encrypt_file, decrypt_file
 
 rng = Random.new().read
@@ -18,7 +17,7 @@ class SecurityException(BaseException):
     def __repr__(self):
         return 'SecurityException: ' + self.msg
 
-class Bootlegger(object):
+class BootLegger(object):
     def __init__(self, username, pubkey, privkey, 
                  host = DEFAULT_HOST, password = '', auth = True):
         self.username = username
@@ -29,9 +28,9 @@ class Bootlegger(object):
         self.privkey = privkey
 
         if auth:
-            self.authenticate(create_user)
+            self.authenticate()
    
-    def authenticate(self, create_user = False):
+    def authenticate(self):
         cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
         write_cookies = True
 
@@ -46,12 +45,12 @@ class Bootlegger(object):
         else:
             cookies = self._real_auth()
 
+        self.cookies = dict([(str(key), str(val)) for (key, val) in cookies.items()])
+
         if write_cookies:
             f = open(cookiefname, 'w')
-            json.dump(cookies, f) 
+            json.dump(self.cookies, f) 
             f.close()
-
-        self.cookies = dict([(str(key), str(val)) for (key, val) in cookies.items()])
        
     def upload(self, fname):
         rsakey = RSA.importKey(self.pubkey)
@@ -76,7 +75,7 @@ class Bootlegger(object):
         if r.status_code != 200:
             r.raise_for_status()
 
-    def download(self.fname):
+    def download(self, fname):
         url = 'http://' + self.host + '/file/download/' + fname
         tempname = '/tmp/' + b64encode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
@@ -195,11 +194,14 @@ class Bootlegger(object):
         if r.status_code != 200:
             r.raise_for_status()
 
+        if not r.cookies['signature']:
+            raise SecurityException('Server did not return cookie.')
+
         servkey = self.get_pubkey('server')
         rsakey = RSA.importKey(servkey)
         servsig = int(r.cookies['signature'])
 
-        if not rsakey.verify(username, (servsig,)):
+        if not rsakey.verify(self.username, (servsig,)):
             raise SecurityException('Could not verify server signature') 
 
         return r.cookies
@@ -219,12 +221,15 @@ class Bootlegger(object):
         
         if r.status_code != 200:
             r.raise_for_status()
+
+        if not r.cookies['signature']:
+            raise SecurityException('Server did not return cookie')
         
         servkey = self.get_pubkey('server')
         rsakey = RSA.importKey(servkey)
         servsig = int(r.cookies['signature'])
 
-        if not rsakey.verify(username, (servsig,)):
+        if not rsakey.verify(self.username, (servsig,)):
             raise SecurityException('Could not verify server signature')
 
         return r.cookies
