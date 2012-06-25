@@ -17,6 +17,9 @@ class SecurityException(BaseException):
     def __repr__(self):
         return 'SecurityException: ' + self.msg
 
+def hexencode(s):
+    return ''.join([hex(ord(c)).replace('0x', '') for c in s])
+
 class BootLegger(object):
     def __init__(self, username, pubkey, privkey, 
                  host = DEFAULT_HOST, password = '', auth = True):
@@ -56,7 +59,7 @@ class BootLegger(object):
         rsakey = RSA.importKey(self.pubkey)
         
         aes_key = rng(32)
-        tempname = '/tmp/' + b64encode(rng(16)) + '.bootleg'
+        tempname = '/tmp/' + hexencode(rng(16)) + '.bootleg'
         encrypt_file(fname, tempname, aes_key)
         aes_key = rsakey.encrypt(aes_key, rng(384))[0]
         aes_key = b64encode(aes_key)
@@ -77,7 +80,7 @@ class BootLegger(object):
 
     def download(self, fname):
         url = 'http://' + self.host + '/file/download/' + fname
-        tempname = '/tmp/' + b64encode(rng(16)) + '.bootleg'
+        tempname = '/tmp/' + hexencode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
 
         if r.status_code != 200:
