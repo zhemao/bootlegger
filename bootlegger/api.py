@@ -1,4 +1,5 @@
 import requests
+            flist = bl.list_files()
 from Crypto.PublicKey import RSA
 from Crypto import Random
 import os
@@ -96,8 +97,11 @@ class BootLegger(object):
 
         decrypt_file(tempname, fname, aes_key)
 
-    def list_files(self):
+    def list_files(self, pattern = None):
         url = 'http://' + self.host + '/file/list'
+
+        if prefix:
+            url += '/' + pattern
         
         r = requests.get(url, cookies=self.cookies)
 

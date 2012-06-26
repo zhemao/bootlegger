@@ -9,35 +9,7 @@ from Crypto import Random
 
 DEFAULT_HOST = 'localhost'
 
-def main():
-    conf = ConfigParser()
-    conf.read([os.path.expanduser('~/.bootlegger/bootlegger.conf')])
-
-    if len(sys.argv) < 2:
-        print "Usage: " + sys.argv[0] + " subcommand [args ... ]"
-        exit(1)
-
-    host = conf.get('speakeasy', 'host') or DEFAULT_HOST
-    username = conf.get('speakeasy', 'username') or getpass.getuser()
-    
-    pubkeyfname = '~/.bootlegger/' + username + '_public.pem'
-    privkeyfname = '~/.bootlegger/' + username + '_private.pem'
-
-    pubkey = open(os.path.expanduser(pubkeyfname)).read()
-    privkey = open(os.path.expanduser(privkeyfname)).read()
-    
-    if 'ENCRYPTED' in privkey:
-        password = getpass.getpass('Password: ')
-    else:
-        password = ''
-
-    if sys.argv[1] == 'addkey':
-        bl = BootLegger(username, pubkey, privkey, host, password, False)
-        bl.add_pubkey()
-        sys.exit(0)
-        
-    bl = BootLegger(username, pubkey, privkey, host, password) 
-
+def perform_action(bl):
     if sys.argv[1] == 'upload':
         for fname in sys.argv[2:]:
             bl.upload(fname)
@@ -47,7 +19,10 @@ def main():
             bl.download(fname)
     
     elif sys.argv[1] == 'list':
-        flist = bl.list_files()
+        if len(sys.argv) > 2:
+            flist = bl.list_files(sys.argv[2])
+        else:
+            flist = bl.list_files()
 
         for fname in flist:
             print fname
@@ -78,6 +53,37 @@ def main():
 
         for fname in filenames:
             bl.delete(fname)
+
+def main():
+    conf = ConfigParser()
+    conf.read([os.path.expanduser('~/.bootlegger/bootlegger.conf')])
+
+    if len(sys.argv) < 2:
+        print "Usage: " + sys.argv[0] + " subcommand [args ... ]"
+        exit(1)
+
+    host = conf.get('speakeasy', 'host') or DEFAULT_HOST
+    username = conf.get('speakeasy', 'username') or getpass.getuser()
+    
+    pubkeyfname = '~/.bootlegger/' + username + '_public.pem'
+    privkeyfname = '~/.bootlegger/' + username + '_private.pem'
+
+    pubkey = open(os.path.expanduser(pubkeyfname)).read()
+    privkey = open(os.path.expanduser(privkeyfname)).read()
+    
+    if 'ENCRYPTED' in privkey:
+        password = getpass.getpass('Password: ')
+    else:
+        password = ''
+
+    if sys.argv[1] == 'addkey':
+        bl = BootLegger(username, pubkey, privkey, host, password, False)
+        bl.add_pubkey()
+        sys.exit(0)
+        
+    bl = BootLegger(username, pubkey, privkey, host, password) 
+
+    perform_action(bl)    
 
 def blencrypt():
     if len(sys.argv) < 3:
