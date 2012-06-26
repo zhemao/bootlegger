@@ -99,7 +99,7 @@ class BootLegger(object):
     def list_files(self, pattern = None):
         url = 'http://' + self.host + '/file/list'
 
-        if prefix:
+        if pattern:
             url += '/' + pattern
         
         r = requests.get(url, cookies=self.cookies)
