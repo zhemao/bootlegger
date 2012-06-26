@@ -42,7 +42,15 @@ To upload a file, run
 
 	bl upload file.txt
 
-To list all files on the server, run
+You can give this subcommand multiple arguments
+
+	bl upload file1.txt file2.txt ...
+
+Giving the prefix option prefixes each filename on the server
+
+	bl upload file.txt -p xyz # uploads to xyz_file.txt
+
+To list all the files you have stored on the server, run
 
 	bl list
 
@@ -56,6 +64,14 @@ To download a file run
 
 	bl download file.txt
 
+If the file is prefixed, run
+
+	bl download file.txt -p xyz # downloads xyz_file.txt to file.txt
+
+To download into a directory other than the current working directory run
+	
+	bl download file.txt -d some/other/directory
+
 To get detailed information about a file, run
 
 	bl info file.txt
@@ -63,3 +79,6 @@ To get detailed information about a file, run
 To share a file with another user, run
 
 	bl share otheruser file.txt
+
+You can override the username and host in the configuration file by passing
+arguments to the --username and --host options on the command line.
