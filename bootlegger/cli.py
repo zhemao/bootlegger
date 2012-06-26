@@ -6,52 +6,70 @@ import json
 import getpass
 from .cryptfile import encrypt_file, decrypt_file
 from Crypto import Random
+from argparse import ArgumentParser
 
 DEFAULT_HOST = 'localhost'
 
-def perform_action(bl):
-    if sys.argv[1] == 'upload':
-        for fname in sys.argv[2:]:
-            bl.upload(fname)
+def perform_action(host, username, password, pubkey, privkey, args):
+    if args.subcommand == 'addkey':
+        bl = BootLegger(username, pubkey, privkey, host, password, False)
+        bl.add_pubkey()
+        sys.exit(0)
+       
+    bl = BootLegger(username, pubkey, privkey, host, password) 
+
+    if args.subcommand == 'upload':
+        for fname in args.subargs:
+            if args.prefix:
+                rname = args.prefix + '_' + fname
+            else: rname = fname
+            
+            bl.upload(fname, rname)
     
-    elif sys.argv[1] == 'download':
-        for fname in sys.argv[2:]:
-            bl.download(fname)
+    elif args.subcommand == 'download':
+        for fname in args.subargs:
+            lname = fname
+            
+            if args.prefix:
+                fname = args.prefix + '_' + fname
+            
+            if args.directory:
+                lname = os.path.join(args.directory, lname)
+
+            bl.download(fname, lname)
     
-    elif sys.argv[1] == 'list':
-        if len(sys.argv) > 2:
-            flist = bl.list_files(sys.argv[2])
+    elif args.subcommand == 'list':
+        if len(args.subargs) > 0:
+            flist = bl.list_files(args.subargs[0])
         else:
             flist = bl.list_files()
 
         for fname in flist:
             print fname
 
-    elif sys.argv[1] == 'info':
-        finfo = bl.get_info(sys.argv[2])
+    elif args.subcommand == 'info':
+        finfo = bl.get_info(args.subargs[0])
 
         for key in finfo:
             print(key + ': ' + str(finfo[key]))
 
-    elif sys.argv[1] == 'share':
-        recipient = sys.argv[2]
-        filenames = sys.argv[3:]
+    elif args.subcommand == 'share':
+        recipient = args.subargs[0]
+        filenames = args.subargs[1:]
 
         for fname in filenames:
             bl.share(fname, recipient)
 
-    elif sys.argv[1] == 'versions':
-        fname = sys.argv[2]
+    elif args.subcommand == 'versions':
+        fname = args.subargs[0]
 
         dates = bl.versions(fname)
 
         for d in dates:
             print(d)
 
-    elif sys.argv[1] == 'delete':
-        filenames = sys.argv[2:]
-
-        for fname in filenames:
+    elif args.subcommand == 'delete':
+        for fname in args.subargs:
             bl.delete(fname)
 
 def main():
@@ -65,6 +83,23 @@ def main():
     host = conf.get('speakeasy', 'host') or DEFAULT_HOST
     username = conf.get('speakeasy', 'username') or getpass.getuser()
     
+    parser = ArgumentParser(description='interact with speakeasy')
+    parser.add_argument('subcommand', help='one of list, upload, download, share, addkey')
+    parser.add_argument('subargs', nargs='*', help='arguments for subcommand')
+    parser.add_argument('--host', dest='host',
+                        help='the host on which speakeasy is running')
+    parser.add_argument('--username', dest='username',
+                        help='username to use when authenticating')
+    parser.add_argument('-p', '--prefix', dest='prefix',
+                        help='the prefix you wish to use for all uploaded files')
+    parser.add_argument('-d', '--directory', dest='directory',
+                        help='the directory to which files should be downloaded')
+
+    args = parser.parse_args()
+
+    if args.username: username = args.username
+    if args.host: host = args.host
+
     pubkeyfname = '~/.bootlegger/' + username + '_public.pem'
     privkeyfname = '~/.bootlegger/' + username + '_private.pem'
 
@@ -76,15 +111,9 @@ def main():
     else:
         password = ''
 
-    if sys.argv[1] == 'addkey':
-        bl = BootLegger(username, pubkey, privkey, host, password, False)
-        bl.add_pubkey()
-        sys.exit(0)
-        
-    bl = BootLegger(username, pubkey, privkey, host, password) 
+    perform_action(host, username, password, pubkey, privkey, args)
 
-    perform_action(bl)    
-
+    
 def blencrypt():
     if len(sys.argv) < 3:
         print 'Usage: ' + sys.argv[0] + ' infile keyfile'

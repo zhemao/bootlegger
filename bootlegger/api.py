@@ -55,7 +55,7 @@ class BootLegger(object):
             json.dump(self.cookies, f) 
             f.close()
        
-    def upload(self, fname):
+    def upload(self, fname, rname = None):
         rsakey = RSA.importKey(self.pubkey)
         
         aes_key = rng(32)
@@ -68,7 +68,10 @@ class BootLegger(object):
         
         cryptf = open(tempname)
 
-        files = {'file': (os.path.basename(fname), cryptf)}
+        if not rname:
+            rname = os.path.basename(fname)
+
+        files = {'file': (rname, cryptf)}
         headers = {'Symmetric-Key': str(aes_key)}
 
         r = requests.post(url, cookies=self.cookies, files=files, headers=headers)
@@ -78,10 +81,13 @@ class BootLegger(object):
         if r.status_code != 200:
             r.raise_for_status()
 
-    def download(self, fname):
+    def download(self, fname, lname = None):
         url = 'http://' + self.host + '/file/download/' + fname
         tempname = '/tmp/' + hexencode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
+
+        if not lname:
+            lname = fname
 
         if r.status_code != 200:
             r.raise_for_status()
@@ -94,7 +100,7 @@ class BootLegger(object):
         rsakey = RSA.importKey(self.privkey, self.password)
         aes_key = rsakey.decrypt(aes_key)
 
-        decrypt_file(tempname, fname, aes_key)
+        decrypt_file(tempname, lname, aes_key)
 
     def list_files(self, pattern = None):
         url = 'http://' + self.host + '/file/list'
