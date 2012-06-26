@@ -46,6 +46,12 @@ To list all files on the server, run
 
 	bl list
 
+You can optionally give the list command a Unix typeglob as a parameter to
+list only files that match the pattern. Make sure to properly escape to the
+glob so that your shell doesn't expand it.
+
+	bl list \*.txt
+
 To download a file run
 
 	bl download file.txt
