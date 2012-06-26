@@ -130,7 +130,7 @@ class BootLegger(object):
         return resp['fileinfo']
 
     def share(self, fname, recipient):
-        finfo = get_info(fname, self.cookies, self.host)
+        finfo = self.get_info(fname)
         
         rsakey = RSA.importKey(self.privkey, self.password)
         aes_key = rsakey.decrypt(b64decode(finfo['aes_key']))
