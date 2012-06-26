@@ -69,7 +69,7 @@ class BootLegger(object):
         cryptf = open(tempname)
 
         files = {'file': (os.path.basename(fname), cryptf)}
-        headers = {'X-Symmetric-Key': str(aes_key)}
+        headers = {'Symmetric-Key': str(aes_key)}
 
         r = requests.post(url, cookies=self.cookies, files=files, headers=headers)
 
@@ -90,7 +90,7 @@ class BootLegger(object):
             for chunk in r.iter_content():
                 tempf.write(chunk)
         
-        aes_key = b64decode(r.headers['X-Symmetric-Key'])
+        aes_key = b64decode(r.headers['Symmetric-Key'])
         rsakey = RSA.importKey(self.privkey, self.password)
         aes_key = rsakey.decrypt(aes_key)
 
@@ -132,7 +132,7 @@ class BootLegger(object):
         aes_key = rsakey.encrypt(aes_key, rng(384))[0]
         aes_key = b64encode(aes_key)
 
-        headers = {'X-Symmetric-Key': aes_key}
+        headers = {'Symmetric-Key': aes_key}
         data = {'recipient': recipient, 'filename': fname}
 
         url = 'http://' + self.host + '/file/share'
