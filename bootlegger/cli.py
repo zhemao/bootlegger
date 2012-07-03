@@ -84,7 +84,7 @@ def main():
     username = conf.get('speakeasy', 'username') or getpass.getuser()
     
     parser = ArgumentParser(description='interact with speakeasy')
-    parser.add_argument('subcommand', help='one of list, upload, download, share, addkey')
+    parser.add_argument('subcommand', help='one of list, upload, download, share, addkey, versions')
     parser.add_argument('subargs', nargs='*', help='arguments for subcommand')
     parser.add_argument('--host', dest='host',
                         help='the host on which speakeasy is running')

@@ -80,5 +80,9 @@ To share a file with another user, run
 
 	bl share otheruser file.txt
 
+To see the dates of previous versions of the file, run
+
+    bl versions file.txt
+
 You can override the username and host in the configuration file by passing
 arguments to the --username and --host options on the command line.
