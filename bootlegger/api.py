@@ -18,8 +18,15 @@ class SecurityException(BaseException):
         return 'SecurityException: ' + self.msg
 
 class BootLegger(object):
+    """The base class for interacting with speakeasy"""
     def __init__(self, username, pubkey, privkey, 
                  host = DEFAULT_HOST, password = '', auth = True):
+        """username is the username of the speakeasy user
+           pubkey is the user's public key as a string
+           privkey is the user's private key as a string
+           host is the host that speakeasy is running on (default is localhost)
+           password is the password for the private key (default to blank / no password)
+           auth determines whether to connect and authenticate immediately (default to true)"""
         self.username = username
         self.password = password
         self.host = host
@@ -31,6 +38,8 @@ class BootLegger(object):
             self.authenticate()
    
     def authenticate(self):
+        """Authenticate to speakeasy. You do not need to call this yourself
+           if you set auth = True in the constructor"""
         cookiefname = os.path.expanduser('~/.bootlegger/cookiejar.json')
         write_cookies = True
 
@@ -53,6 +62,10 @@ class BootLegger(object):
             f.close()
        
     def upload(self, fname, rname = None):
+        """Encrypt and upload the file given by fname to the server.
+           fname should be the full path to the file.
+           You can set the optional argument rname to give the file a 
+           different name on the server"""
         rsakey = RSA.importKey(self.pubkey)
         
         aes_key = rng(32)
@@ -79,6 +92,11 @@ class BootLegger(object):
             r.raise_for_status()
 
     def download(self, fname, lname = None):
+        """Download and decrypt the file given by fname from the server.
+           By default it creates the file in the current directory with 
+           the same name as on the server. To give the downloaded file a 
+           different name or download it to a different location, set the
+           lname parameter to where you want the file downloaded."""
         url = 'http://' + self.host + '/file/download/' + fname
         tempname = '/tmp/' + b16encode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
@@ -100,6 +118,10 @@ class BootLegger(object):
         decrypt_file(tempname, lname, aes_key)
 
     def list_files(self, pattern = None):
+        """Get a list of the names of the files stored on the server.
+           If the optional argument pattern is given, the method will
+           only list files matching the pattern. 
+           Pattern should by a unix-style file glob."""
         url = 'http://' + self.host + '/file/list'
 
         if pattern:
@@ -115,6 +137,8 @@ class BootLegger(object):
         return resp['files']
 
     def get_info(self, fname):
+        """Get more detailed information about the file called fname
+           from the server."""
         url = 'http://' + self.host + '/file/info/' + fname
 
         r = requests.get(url, cookies=self.cookies)
@@ -127,6 +151,7 @@ class BootLegger(object):
         return resp['fileinfo']
 
     def share(self, fname, recipient):
+        """Share a file called fname stored on the server with the recipient"""
         finfo = self.get_info(fname)
         
         rsakey = RSA.importKey(self.privkey, self.password)
@@ -149,6 +174,7 @@ class BootLegger(object):
             r.raise_for_status()
 
     def versions(self, fname):
+        """Get the dates of previous modifications to the file."""
         url = 'http://' + self.host + '/file/versions/' + fname
 
         r = requests.get(url, cookies=self.cookies)
@@ -161,6 +187,7 @@ class BootLegger(object):
         return resp['dates']
 
     def delete(self, fname):
+        """Delete a file from the server."""
         url = 'http://' + self.host + '/file/delete/' + fname
 
         r = requests.post(url, cookies=self.cookies)
@@ -169,6 +196,9 @@ class BootLegger(object):
             r.raise_for_status()
 
     def get_pubkey(self, username):
+        """Get the public key of a user.
+           Takes the user's username as an argument.
+           Returns the public key as a string."""
         fname = os.path.expanduser('~/.bootlegger/' + username + '_public.pem')
 
         if os.path.isfile(fname):
@@ -216,6 +246,7 @@ class BootLegger(object):
         return r.cookies
 
     def add_pubkey(self):
+        """Add a public key to the server."""
         rsakey = RSA.importKey(self.privkey, self.password)
         shibboleth = 'Rosie sent me'
         signature = rsakey.sign(shibboleth, rng(384))[0]
