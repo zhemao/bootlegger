@@ -2,7 +2,7 @@ import requests
 from Crypto.PublicKey import RSA
 from Crypto import Random
 import os
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode, b16encode
 import json
 from .cryptfile import encrypt_file, decrypt_file
 
@@ -16,9 +16,6 @@ class SecurityException(BaseException):
         return self.msg
     def __repr__(self):
         return 'SecurityException: ' + self.msg
-
-def hexencode(s):
-    return ''.join([hex(ord(c)).replace('0x', '') for c in s])
 
 class BootLegger(object):
     def __init__(self, username, pubkey, privkey, 
@@ -59,7 +56,7 @@ class BootLegger(object):
         rsakey = RSA.importKey(self.pubkey)
         
         aes_key = rng(32)
-        tempname = '/tmp/' + hexencode(rng(16)) + '.bootleg'
+        tempname = '/tmp/' + b16encode(rng(16)) + '.bootleg'
         encrypt_file(fname, tempname, aes_key)
         aes_key = rsakey.encrypt(aes_key, rng(384))[0]
         aes_key = b64encode(aes_key)
@@ -83,7 +80,7 @@ class BootLegger(object):
 
     def download(self, fname, lname = None):
         url = 'http://' + self.host + '/file/download/' + fname
-        tempname = '/tmp/' + hexencode(rng(16)) + '.bootleg'
+        tempname = '/tmp/' + b16encode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
 
         if not lname:
