@@ -19,6 +19,8 @@ def perform_action(host, username, password, pubkey, privkey, args):
     bl = BootLegger(username, pubkey, privkey, host, password) 
 
     if args.subcommand == 'upload':
+        if len(args.subargs) == 0:
+            return "no files to upload"
         for fname in args.subargs:
             if args.prefix:
                 rname = args.prefix + '_' + fname
@@ -27,6 +29,8 @@ def perform_action(host, username, password, pubkey, privkey, args):
             bl.upload(fname, rname)
     
     elif args.subcommand == 'download':
+        if len(args.subargs) == 0:
+            return "no files to download"
         for fname in args.subargs:
             lname = fname
             
@@ -48,12 +52,17 @@ def perform_action(host, username, password, pubkey, privkey, args):
             print fname
 
     elif args.subcommand == 'info':
+        if len(args.subargs) == 0:
+            return "Must provide filename"
+
         finfo = bl.get_info(args.subargs[0])
 
         for key in finfo:
             print(key + ': ' + str(finfo[key]))
 
     elif args.subcommand == 'share':
+        if len(args.subargs) < 2:
+            return "Must provide recipient and filenames"
         recipient = args.subargs[0]
         filenames = args.subargs[1:]
 
@@ -61,6 +70,8 @@ def perform_action(host, username, password, pubkey, privkey, args):
             bl.share(fname, recipient)
 
     elif args.subcommand == 'versions':
+        if len(args.subargs) == 0:
+            return "must provide filename"
         fname = args.subargs[0]
 
         dates = bl.versions(fname)
@@ -69,6 +80,8 @@ def perform_action(host, username, password, pubkey, privkey, args):
             print(d)
 
     elif args.subcommand == 'delete':
+        if len(args.subargs) == 0:
+            return "must provide filenames"
         for fname in args.subargs:
             bl.delete(fname)
 
@@ -111,7 +124,11 @@ def main():
     else:
         password = ''
 
-    perform_action(host, username, password, pubkey, privkey, args)
+    errmsg = perform_action(host, username, password, pubkey, privkey, args)
+
+    if errmsg:
+        print(errmsg)
+        sys.exit(1)
 
     
 def blencrypt():
