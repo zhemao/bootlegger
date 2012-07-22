@@ -2,4 +2,5 @@
 *.swp
 build
 dist
+html
 *.egg-info
