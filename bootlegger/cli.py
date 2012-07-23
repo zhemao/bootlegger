@@ -23,8 +23,8 @@ def perform_action(host, username, password, pubkey, privkey, args):
             return "no files to upload"
         for fname in args.subargs:
             if args.prefix:
-                rname = args.prefix + '_' + fname
-            else: rname = fname
+                rname = args.prefix + '_' + os.path.basename(fname)
+            else: rname = os.path.basename(fname)
             
             bl.upload(fname, rname)
     
