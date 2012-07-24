@@ -10,6 +10,17 @@ from argparse import ArgumentParser
 
 DEFAULT_HOST = 'localhost'
 
+def expand_file_list(bl, file_list):
+    new_file_list = []
+
+    for filename in file_list:
+        if '*' in filename:
+            new_file_list.extend(bl.list_files(filename))
+        else:
+            new_file_list.append(filename)
+
+    return new_file_list
+
 def perform_action(host, username, password, pubkey, privkey, args):
     if args.subcommand == 'addkey':
         bl = BootLegger(username, pubkey, privkey, host, password, False)
@@ -31,7 +42,10 @@ def perform_action(host, username, password, pubkey, privkey, args):
     elif args.subcommand == 'download':
         if len(args.subargs) == 0:
             return "no files to download"
-        for fname in args.subargs:
+
+        file_list = expand_file_list(bl, args.subargs)
+        
+        for fname in file_list:
             lname = fname
             
             if args.prefix:
@@ -64,7 +78,7 @@ def perform_action(host, username, password, pubkey, privkey, args):
         if len(args.subargs) < 2:
             return "Must provide recipient and filenames"
         recipient = args.subargs[0]
-        filenames = args.subargs[1:]
+        filenames = expand_file_list(bl, args.subargs[1:])
 
         for fname in filenames:
             bl.share(fname, recipient)
@@ -82,7 +96,10 @@ def perform_action(host, username, password, pubkey, privkey, args):
     elif args.subcommand == 'delete':
         if len(args.subargs) == 0:
             return "must provide filenames"
-        for fname in args.subargs:
+
+        file_list = expand_file_list(bl, args.subargs)
+        
+        for fname in file_list:
             bl.delete(fname)
 
 def main():
