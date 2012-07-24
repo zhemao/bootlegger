@@ -5,9 +5,21 @@ import os
 from base64 import b64encode, b64decode, b16encode
 import json
 from .cryptfile import encrypt_file, decrypt_file
+import hashlib
 
 rng = Random.new().read
 DEFAULT_HOST = 'localhost'
+
+def md5file(fname):
+    f = open(fname, 'rb')
+    cksum = hashlib.md5()
+
+    for chunk in f:
+        cksum.update(chunk)
+
+    f.close()
+
+    return cksum.hexdigest()
 
 class SecurityException(BaseException):
     def __init__(self, msg):
@@ -73,6 +85,8 @@ class BootLegger(object):
         encrypt_file(fname, tempname, aes_key)
         aes_key = rsakey.encrypt(aes_key, rng(384))[0]
         aes_key = b64encode(aes_key)
+        
+        cksum = md5file(fname)
 
         url = 'http://' + self.host + '/file/upload'
         
@@ -82,7 +96,8 @@ class BootLegger(object):
             rname = os.path.basename(fname)
 
         files = {'file': (rname, cryptf)}
-        headers = {'Symmetric-Key': str(aes_key)}
+        headers = {'Symmetric-Key': str(aes_key),
+                   'Plaintext-MD5': cksum}
 
         r = requests.post(url, cookies=self.cookies, files=files, headers=headers)
 
