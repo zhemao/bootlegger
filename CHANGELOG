@@ -1,3 +1,12 @@
+Version 1.0.4
+
+Make sure the md5 sum of the plaintext file is passed to the server.
+
+Version 1.0.3
+
+Made the python api object-oriented to reduce the number of arguments that
+need to be passed to the api functions.
+
 Version 0.5.1
 
 Verify the signature set by the server in the cookie. This is sort of a 
