@@ -81,7 +81,7 @@ class BootLegger(object):
         rsakey = RSA.importKey(self.pubkey)
         
         aes_key = rng(32)
-        tempname = '/tmp/' + b16encode(rng(16)) + '.bootleg'
+        tempname = '/var/tmp/' + b16encode(rng(16)) + '.bootleg'
         encrypt_file(fname, tempname, aes_key)
         aes_key = rsakey.encrypt(aes_key, rng(384))[0]
         aes_key = b64encode(aes_key)
@@ -106,6 +106,8 @@ class BootLegger(object):
         if r.status_code != 200:
             r.raise_for_status()
 
+        os.remove(tempname)
+
     def download(self, fname, lname = None):
         """Download and decrypt the file given by fname from the server.
            By default it creates the file in the current directory with 
@@ -113,7 +115,7 @@ class BootLegger(object):
            different name or download it to a different location, set the
            lname parameter to where you want the file downloaded."""
         url = 'http://' + self.host + '/file/download/' + fname
-        tempname = '/tmp/' + b16encode(rng(16)) + '.bootleg'
+        tempname = '/var/tmp/' + b16encode(rng(16)) + '.bootleg'
         r = requests.get(url, cookies=self.cookies)
 
         if not lname:
@@ -131,6 +133,8 @@ class BootLegger(object):
         aes_key = rsakey.decrypt(aes_key)
 
         decrypt_file(tempname, lname, aes_key)
+
+        os.remove(tempname)
 
     def list_files(self, pattern = None):
         """Get a list of the names of the files stored on the server.
